@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>_OS API Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f4f0;
+    --bg-tertiary: #eeecea;
+    --text-primary: #1a1917;
+    --text-secondary: #6b6a66;
+    --text-muted: #9b9a96;
+    --border: rgba(0,0,0,0.10);
+    --border-strong: rgba(0,0,0,0.18);
+    --accent: #1D9E75;
+    --accent-dim: #E1F5EE;
+    --accent-text: #0F6E56;
+    --blue-dim: #E6F1FB;
+    --blue-text: #185FA5;
+    --gray-dim: #F1EFE8;
+    --gray-text: #5F5E5A;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+    --sidebar-width: 220px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1c1b18;
+      --bg-secondary: #242320;
+      --bg-tertiary: #2c2b27;
+      --text-primary: #f0ede8;
+      --text-secondary: #9b9a96;
+      --text-muted: #6b6a66;
+      --border: rgba(255,255,255,0.09);
+      --border-strong: rgba(255,255,255,0.16);
+      --accent: #2bbf8d;
+      --accent-dim: #0a2e22;
+      --accent-text: #5edcb0;
+      --blue-dim: #0c1e30;
+      --blue-text: #6ab4f5;
+      --gray-dim: #282723;
+      --gray-text: #a0a09a;
+    }
+  }
+
+  html, body { height: 100%; font-family: var(--sans); background: var(--bg-tertiary); color: var(--text-primary); font-size: 15px; line-height: 1.6; }
+
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar { width: var(--sidebar-width); flex-shrink: 0; background: var(--bg-secondary); border-right: 0.5px solid var(--border-strong); display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+  .sidebar-brand { padding: 1.25rem 1.25rem 1rem; border-bottom: 0.5px solid var(--border); margin-bottom: 0.5rem; }
+  .sidebar-brand .os-name { font-family: var(--mono); font-size: 15px; font-weight: 500; color: var(--accent); letter-spacing: -0.02em; }
+  .sidebar-brand .os-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .sidebar-label { font-size: 10px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-muted); padding: 0.75rem 1.25rem 0.35rem; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 7px 1.25rem; font-size: 13.5px; font-family: var(--sans); cursor: pointer; color: var(--text-secondary); background: none; border: none; border-right: 2px solid transparent; width: 100%; text-align: left; transition: background 0.12s, color 0.12s, border-color 0.12s; }
+  .nav-item i { font-size: 16px; flex-shrink: 0; }
+  .nav-item:hover { background: var(--bg-primary); color: var(--text-primary); }
+  .nav-item.active { background: var(--bg-primary); color: var(--accent); font-weight: 500; border-right-color: var(--accent); }
+
+  /* Main */
+  .main { flex: 1; overflow-y: auto; background: var(--bg-primary); }
+  .content { max-width: 860px; margin: 0 auto; padding: 2.5rem 2rem 4rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Section header */
+  .section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 1.75rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--border); }
+  .section-head i { font-size: 22px; color: var(--accent); }
+  .section-head h2 { font-size: 20px; font-weight: 500; letter-spacing: -0.02em; }
+
+  /* Overview */
+  .overview-intro { font-size: 14px; color: var(--text-secondary); line-height: 1.75; margin-bottom: 1.75rem; }
+  .overview-intro code { font-family: var(--mono); font-size: 12.5px; background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px; border: 0.5px solid var(--border); }
+  .overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 12px; margin-bottom: 2rem; }
+  .ov-card { background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 1.1rem 1rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .ov-card:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .ov-card i { font-size: 22px; color: var(--accent); display: block; margin-bottom: 0.5rem; }
+  .ov-card h3 { font-size: 13.5px; font-weight: 500; margin-bottom: 4px; }
+  .ov-card p { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+
+  /* API cards */
+  .api-card { border: 0.5px solid var(--border); border-radius: var(--radius-md); margin-bottom: 10px; overflow: hidden; }
+  .api-card-head { display: flex; align-items: center; gap: 10px; padding: 0.75rem 1rem; background: var(--bg-secondary); cursor: pointer; border: none; width: 100%; text-align: left; font-family: var(--sans); transition: background 0.12s; }
+  .api-card-head:hover { background: var(--bg-tertiary); }
+  .api-sig { font-family: var(--mono); font-size: 12.5px; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chevron { font-size: 14px; color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0; }
+  .chevron.open { transform: rotate(180deg); }
+  .api-card-body { padding: 1rem 1.1rem; border-top: 0.5px solid var(--border); display: none; }
+  .api-card-body.open { display: block; }
+  .api-card-body p { font-size: 13.5px; color: var(--text-secondary); line-height: 1.75; margin-bottom: 0.85rem; }
+
+  /* Badge */
+  .badge { display: inline-block; font-size: 10.5px; font-family: var(--mono); font-weight: 500; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; white-space: nowrap; }
+  .badge-green { background: var(--accent-dim); color: var(--accent-text); }
+  .badge-blue  { background: var(--blue-dim);   color: var(--blue-text); }
+  .badge-gray  { background: var(--gray-dim);   color: var(--gray-text); }
+
+  /* Code */
+  code { font-family: var(--mono); font-size: 12px; background: var(--bg-secondary); padding: 2px 5px; border-radius: 4px; border: 0.5px solid var(--border); }
+  pre { font-family: var(--mono); font-size: 12px; background: var(--bg-secondary); color: var(--text-primary); padding: 1rem 1.1rem; border-radius: var(--radius-md); border: 0.5px solid var(--border); overflow-x: auto; line-height: 1.7; margin: 0.6rem 0 0.75rem; }
+
+  /* Param table */
+  .param-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 0.5rem 0 0.85rem; }
+  .param-table th { text-align: left; padding: 5px 10px; color: var(--text-muted); font-weight: 500; border-bottom: 0.5px solid var(--border); font-size: 11.5px; letter-spacing: 0.04em; }
+  .param-table td { padding: 6px 10px; border-bottom: 0.5px solid var(--border); vertical-align: top; }
+  .param-table td:first-child { font-family: var(--mono); font-size: 12px; color: var(--accent); white-space: nowrap; width: 1%; }
+  .param-table td:last-child { color: var(--text-primary); line-height: 1.65; }
+
+  /* Returns */
+  .returns-row { display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 0.25rem 0; }
+  .returns-label { font-size: 11.5px; font-weight: 500; color: var(--text-muted); min-width: 58px; letter-spacing: 0.04em; }
+
+  /* Note callout */
+  .note { background: var(--accent-dim); border-left: 3px solid var(--accent); padding: 0.8rem 1rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; font-size: 13px; color: var(--accent-text); line-height: 1.65; margin-bottom: 1.25rem; }
+
+  .section-desc { font-size: 13.5px; color: var(--text-secondary); line-height: 1.75; margin-bottom: 1.25rem; }
+  .section-desc code { font-size: 12px; }
+
+  /* Mobile */
+  .menu-btn { display: none; position: fixed; top: 14px; left: 14px; z-index: 200; background: var(--bg-primary); border: 0.5px solid var(--border-strong); border-radius: var(--radius-md); padding: 6px 8px; cursor: pointer; color: var(--text-primary); font-size: 18px; line-height: 1; }
+
+  @media (max-width: 680px) {
+    .menu-btn { display: flex; align-items: center; }
+    .sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 100; transition: left 0.22s ease; box-shadow: 2px 0 20px rgba(0,0,0,0.12); }
+    .sidebar.open { left: 0; }
+    .content { padding: 2rem 1.1rem 4rem; }
+    .section-head h2 { font-size: 17px; }
+    .overview-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">
+  <i class="ti ti-menu-2"></i>
+</button>
+
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="os-name">_OS</div>
+      <div class="os-sub">underLineOS &middot; RTOS API</div>
+    </div>
+    <div class="sidebar-label">Reference</div>
+    <button class="nav-item active" data-sec="overview"><i class="ti ti-layout-grid"></i>Overview</button>
+    <button class="nav-item" data-sec="core"><i class="ti ti-components"></i>Core utilities</button>
+    <button class="nav-item" data-sec="timer"><i class="ti ti-clock"></i>SW timer</button>
+    <button class="nav-item" data-sec="irq"><i class="ti ti-bolt"></i>Interrupt</button>
+    <button class="nav-item" data-sec="mutex"><i class="ti ti-lock"></i>Mutex</button>
+    <button class="nav-item" data-sec="fifo"><i class="ti ti-arrows-exchange"></i>FIFO</button>
+    <button class="nav-item" data-sec="sem"><i class="ti ti-chart-bar"></i>Semaphore</button>
+    <button class="nav-item" data-sec="thread"><i class="ti ti-cpu"></i>Threads</button>
+    <button class="nav-item" data-sec="cpu"><i class="ti ti-server"></i>CPU &amp; trap</button>
+  </nav>
+
+  <main class="main" id="main">
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <section class="section active" id="sec-overview">
+        <div class="section-head"><i class="ti ti-layout-grid"></i><h2>Overview</h2></div>
+        <p class="overview-intro">
+          <code>_OS (underLineOS)</code> is a baremetal RTOS built into newlib libc implementing SMP-capable preemptive multi-threading, software timers, mutexes, semaphores, and FIFOs, all exposed through <code>&lt;_os.h&gt;</code>.
+        </p>
+        <div class="overview-grid">
+          <div class="ov-card" onclick="switchTo('core')"><i class="ti ti-components"></i><h3>Core utilities</h3><p>container_of, atomics, linked lists, time macros</p></div>
+          <div class="ov-card" onclick="switchTo('timer')"><i class="ti ti-clock"></i><h3>SW timer</h3><p>Per-CPU software timers with expiration callbacks</p></div>
+          <div class="ov-card" onclick="switchTo('irq')"><i class="ti ti-bolt"></i><h3>Interrupt</h3><p>Register and unregister IRQ handlers</p></div>
+          <div class="ov-card" onclick="switchTo('mutex')"><i class="ti ti-lock"></i><h3>Mutex</h3><p>Recursive-capable blocking mutex with timeout</p></div>
+          <div class="ov-card" onclick="switchTo('fifo')"><i class="ti ti-arrows-exchange"></i><h3>FIFO</h3><p>Blocking byte-stream FIFO with producer/consumer wait queues</p></div>
+          <div class="ov-card" onclick="switchTo('sem')"><i class="ti ti-chart-bar"></i><h3>Semaphore</h3><p>Bounded FIFO counter semaphore</p></div>
+          <div class="ov-card" onclick="switchTo('thread')"><i class="ti ti-cpu"></i><h3>Threads</h3><p>Create, schedule, sleep, stop, and kill threads</p></div>
+          <div class="ov-card" onclick="switchTo('cpu')"><i class="ti ti-server"></i><h3>CPU &amp; trap</h3><p>CPU ID, clock, cycle counter, trap context helpers</p></div>
+        </div>
+        <p style="font-size:13px;color:var(--text-muted)">Select a module from the sidebar or click a card above to explore the API.</p>
+      </section>
+
+      <!-- CORE -->
+      <section class="section" id="sec-core">
+        <div class="section-head"><i class="ti ti-components"></i><h2>Core utilities</h2></div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macro</span>
+            <span class="api-sig">container_of(PTR, TYPE, MEMBER)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Recover the containing structure from a pointer to one of its members.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>PTR</td><td>Pointer to the structure member</td></tr>
+              <tr><td>TYPE</td><td>Container structure type</td></tr>
+              <tr><td>MEMBER</td><td>Name of the member within <code>TYPE</code></td></tr>
+            </tbody></table>
+            <div class="returns-row"><span class="returns-label">Returns</span><span>Pointer to the enclosing structure</span></div>
+            <pre>struct node { int value; };
+struct object { int id; struct node n; };
+
+struct node *x = ...;
+struct object *obj = container_of(x, struct object, n);</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macros</span>
+            <span class="api-sig">Atomic operations — _xchg, _atomic_add, _atomic_inc, _atomic_dec …</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Lock-free atomic operations on a target memory location. All macros return the <strong>previous</strong> value at <code>PTR</code>.</p>
+            <pre>#define _xchg(PTR, VAL)       // Atomically exchange a value.
+#define _atomic_add(PTR, VAL) // Atomically add a value.
+#define _atomic_inc(PTR)      // Atomically increment.
+#define _atomic_dec(PTR)      // Atomically decrement.
+#define _atomic_and(PTR, VAL) // Atomically apply bitwise AND.
+#define _atomic_or(PTR, VAL)  // Atomically apply bitwise OR.
+#define _atomic_xor(PTR, VAL) // Atomically apply bitwise XOR.</pre>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>PTR</td><td>Target memory location</td></tr>
+              <tr><td>VAL</td><td>Value used to compute the new result</td></tr>
+            </tbody></table>
+            <div class="returns-row"><span class="returns-label">Returns</span><span>Previous value stored at <code>PTR</code></span></div>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-gray">struct</span>
+            <span class="api-sig">_dlist_t — intrusive circular doubly-linked list</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Intrusive circular doubly-linked list. Embed <code>_dlist_t</code> into your own structs and use <code>container_of()</code> to recover the parent.</p>
+            <pre>typedef struct _dlist {
+    struct _dlist *prev;
+    struct _dlist *next;
+} _dlist_t;
+
+// Clear list links, setting both prev and next to NULL.
+static inline void _dlist_clr(_dlist_t *l);
+
+// Initialize a circular list node by self-referencing.
+static inline void _dlist_init(_dlist_t *l);
+
+// Insert a node between two consecutive nodes.
+static inline void _dlist_add(_dlist_t *l, _dlist_t *prev, _dlist_t *next);
+
+// Remove entries between two nodes.
+static inline void _dlist_del(_dlist_t *prev, _dlist_t *next);</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macros</span>
+            <span class="api-sig">Time utilities — _date_t, _DATE_MAX, _SECS, _MSECS, _USECS, _NSECS</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>System clock utilities for representing and converting durations to cycle counts.</p>
+            <pre>typedef uint64_t _date_t; // System clock / cycle timestamp type.
+#define _DATE_MAX         // Maximum representable timestamp (infinite timeout).
+#define _SECS(X)          // Convert seconds to clock cycles.
+#define _MSECS(X)         // Convert milliseconds to clock cycles.
+#define _USECS(X)         // Convert microseconds to clock cycles.
+#define _NSECS(X)         // Convert nanoseconds to clock cycles.</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- TIMER -->
+      <section class="section" id="sec-timer">
+        <div class="section-head"><i class="ti ti-clock"></i><h2>Software timer</h2></div>
+        <div class="note">A software timer can only be re-armed or dis-armed by the CPU that armed it. This simplifies implementation because locking mechanisms are not needed.</div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-gray">struct</span>
+            <span class="api-sig">_timer_t — software timer object</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>typedef struct _timer {
+    _dlist_t l;                 // Timer list linkage.
+    _date_t e;                  // Expiration date.
+    uintptr_t cpu;              // Owning CPU.
+    void (*f)(struct _timer *); // Expiration callback.
+} _timer_t;</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macro</span>
+            <span class="api-sig">_timer_init(T, F)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Initialize a timer object. Must be called before arming.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>T</td><td>Pointer to <code>_timer_t</code> object</td></tr>
+              <tr><td>F</td><td>Expiration callback <code>void (*f)(_timer_t *)</code></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_timer_arm(_timer_t *t, _date_t e)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Arm a timer to fire at an absolute expiration timestamp. Must be called from the owning CPU when re-arming.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>t</td><td>Initialized <code>_timer_t</code> object</td></tr>
+              <tr><td>e</td><td>Absolute expiration timestamp (<code>_date_t</code>)</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_timer_disarm(_timer_t *t)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Disarm a previously armed timer. Must be called from the same CPU that armed it.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>t</td><td>Armed <code>_timer_t</code> object to disarm</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- IRQ -->
+      <section class="section" id="sec-irq">
+        <div class="section-head"><i class="ti ti-bolt"></i><h2>Interrupt</h2></div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-gray">struct</span>
+            <span class="api-sig">_irq_t — interrupt handler descriptor</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>typedef struct _irq {
+    _dlist_t l;               // List linkage.
+    uintptr_t n;              // IRQ number.
+    void (*f)(struct _irq *); // IRQ callback.
+} _irq_t;</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macro</span>
+            <span class="api-sig">_irq_init(I, N, F)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Initialize an IRQ descriptor before registration.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>I</td><td>Pointer to <code>_irq_t</code> object</td></tr>
+              <tr><td>N</td><td>IRQ number</td></tr>
+              <tr><td>F</td><td>IRQ callback <code>void (*f)(_irq_t *)</code></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_irq_register / _irq_unregister</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>void _irq_register(_irq_t *i);   // Register an interrupt handler.
+void _irq_unregister(_irq_t *i); // Unregister an interrupt handler.</pre>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>i</td><td>Initialized <code>_irq_t</code> descriptor</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- MUTEX -->
+      <section class="section" id="sec-mutex">
+        <div class="section-head"><i class="ti ti-lock"></i><h2>Mutex</h2></div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-gray">struct</span>
+            <span class="api-sig">_mutex_t — recursive-capable mutex object</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>typedef struct {
+    uintptr_t lock;   // Internal lock.
+    void *owner;      // Owning thread.
+    uintptr_t acqcnt; // Recursive acquisition count.
+    _waitq_t waitq;   // Wait-queue.
+} _mutex_t;</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_mutex_lock(_mutex_t *m, _date_t timeout)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Acquire a mutex, blocking until available or the timeout elapses.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>m</td><td>Mutex object</td></tr>
+              <tr><td>timeout</td><td>Max wait duration — use <code>_DATE_MAX</code> to wait indefinitely</td></tr>
+            </tbody></table>
+            <div class="returns-row"><span class="returns-label">Returns</span><span>Non-zero on success, <code>0</code> on timeout</span></div>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_mutex_unlock(_mutex_t *m)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Release a previously acquired mutex, waking any waiting threads.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>m</td><td>Mutex object to release</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_mutex_lock_recursive / _mutex_unlock_recursive</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Recursive variants — the same thread may acquire the mutex multiple times without deadlocking. Each lock must be paired with a corresponding unlock.</p>
+            <pre>uintptr_t _mutex_lock_recursive(_mutex_t *m, _date_t timeout);
+void _mutex_unlock_recursive(_mutex_t *m);</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- FIFO -->
+      <section class="section" id="sec-fifo">
+        <div class="section-head"><i class="ti ti-arrows-exchange"></i><h2>FIFO</h2></div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-gray">struct</span>
+            <span class="api-sig">_fifo_t — FIFO object</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>typedef struct {
+    uintptr_t lock;  // FIFO lock.
+    uintptr_t widx;  // Write index.
+    uintptr_t ridx;  // Read index.
+    void *buf;       // Buffer.
+    size_t sz;       // Buffer size.
+    _waitq_t wwaitq; // Writers wait-queue.
+    _waitq_t rwaitq; // Readers wait-queue.
+} _fifo_t;</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_fifo_init(_fifo_t *f, void *buf, size_t sz)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Initialize a FIFO with a caller-supplied backing buffer.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>f</td><td>FIFO object</td></tr>
+              <tr><td>buf</td><td>Caller-allocated backing buffer</td></tr>
+              <tr><td>sz</td><td>Buffer size in bytes</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_fifo_put(_fifo_t *f, void *buf, size_t sz, _date_t timeout)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Write data into a FIFO, blocking if full until space is available or the timeout elapses.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>f</td><td>FIFO object</td></tr>
+              <tr><td>buf</td><td>Source data buffer</td></tr>
+              <tr><td>sz</td><td>Number of bytes to write</td></tr>
+              <tr><td>timeout</td><td>Max wait if FIFO is full</td></tr>
+            </tbody></table>
+            <div class="returns-row"><span class="returns-label">Returns</span><span>Number of bytes written</span></div>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_fifo_get(_fifo_t *f, void *buf, size_t sz, bool peek, _date_t timeout)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Read data from a FIFO, blocking if empty. Setting <code>peek</code> to <code>true</code> reads without consuming.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>f</td><td>FIFO object</td></tr>
+              <tr><td>buf</td><td>Destination buffer</td></tr>
+              <tr><td>sz</td><td>Number of bytes to read</td></tr>
+              <tr><td>peek</td><td><code>true</code> to leave data in the FIFO after reading</td></tr>
+              <tr><td>timeout</td><td>Max wait if FIFO is empty</td></tr>
+            </tbody></table>
+            <div class="returns-row"><span class="returns-label">Returns</span><span>Number of bytes read</span></div>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macros &amp; fn</span>
+            <span class="api-sig">_fifo_flush, _fifo_usage, _fifo_rst</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>#define _fifo_flush(X)          // Flush FIFO contents, emptying its buffer.
+size_t _fifo_usage(_fifo_t *f); // Get current FIFO byte usage.
+void _fifo_rst(_fifo_t *f);     // Reset FIFO empty, waking up any writers and readers.</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEMAPHORE -->
+      <section class="section" id="sec-sem">
+        <div class="section-head"><i class="ti ti-chart-bar"></i><h2>Semaphore</h2></div>
+        <p class="section-desc">Semaphores are implemented as bounded FIFO counters. <code>_sem_t</code> is a type alias for <code>_fifo_t</code>.</p>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macros</span>
+            <span class="api-sig">_SEM_DEF, _sem_init, _sem_put, _sem_get, _sem_rst</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>#define _sem_t _fifo_t
+
+#define _SEM_DEF(X, N, I)  // Statically define and initialize a semaphore.
+#define _sem_init(X, N, I) // Dynamically initialize a semaphore.
+#define _sem_put(X, T)     // Release semaphore. Returns non-zero on success.
+#define _sem_get(X, T)     // Acquire semaphore. Returns non-zero on success.
+#define _sem_rst(X)        // Reset semaphore.</pre>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>X</td><td>Semaphore object or name</td></tr>
+              <tr><td>N</td><td>Upper bound (maximum count)</td></tr>
+              <tr><td>I</td><td>Initial count</td></tr>
+              <tr><td>T</td><td>Timeout (<code>_date_t</code>)</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- THREADS -->
+      <section class="section" id="sec-thread">
+        <div class="section-head"><i class="ti ti-cpu"></i><h2>Thread scheduling &amp; sleep</h2></div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-gray">struct</span>
+            <span class="api-sig">_thread_t — thread object</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Use <code>_thread_create()</code> to obtain a <code>_thread_t *</code>.</p>
+            <pre>typedef struct {
+    _dlist_t l;             // List linkage.
+    enum {
+        _THREAD_STOPPED = 0, // Thread is stopped. Covers both "not yet scheduled"
+                             // and "sleeping on a wait-queue" (distinguished by wq).
+        _THREAD_RUNNING = 1  // Thread is runnable or actively executing.
+    } state;
+    _waitq_t *wq;           // Wait-queue the thread is sleeping on, or null if not waiting.
+    _timer_t z;             // Sleep timer.
+    _date_t timeleft;       // Remaining runtime.
+    void *stack;            // Stack base.
+    uintptr_t cpu;          // Assigned CPU.
+    bool pin;               // When true, the thread does not migrate.
+    uintptr_t irq_disabled; // IRQ disable nesting depth; zero means IRQs are enabled.
+    _savedctx_t *savedctx;  // Saved execution context.
+} _thread_t;
+
+_thread_t *_thread_cur; // Pointer to the currently running thread.</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_thread_create(stack, stacksz, entry, arg)</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Create a new thread. The thread is not scheduled until <code>_thread_sched()</code> or <code>_thread_schedoncpu()</code> is called.</p>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>stack</td><td>Caller-allocated stack memory</td></tr>
+              <tr><td>stacksz</td><td>Stack size in bytes</td></tr>
+              <tr><td>entry</td><td>Thread entry point <code>void (*)(void *arg)</code></td></tr>
+              <tr><td>arg</td><td>Argument forwarded to the entry function</td></tr>
+            </tbody></table>
+            <div class="returns-row"><span class="returns-label">Returns</span><span>Newly created <code>_thread_t *</code> object</span></div>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_thread_sched / _thread_schedoncpu</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>// Schedule on any available CPU.
+void _thread_sched(_thread_t *thrd);
+
+// Schedule on a specific CPU.
+void _thread_schedoncpu(_thread_t *thrd, uintptr_t cpu, bool pin);</pre>
+            <table class="param-table"><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+              <tr><td>thrd</td><td>Thread object to schedule</td></tr>
+              <tr><td>cpu</td><td>Target CPU index</td></tr>
+              <tr><td>pin</td><td><code>true</code> to prevent load-balancer migration</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-green">fn</span>
+            <span class="api-sig">_thread_stop / _thread_kill / _thread_exit / _thread_dispose</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>void _thread_stop(_thread_t *thrd);    // Stop (pause) a thread.
+void _thread_kill(_thread_t *thrd);    // Terminate a thread.
+void _thread_exit(void);               // Terminate the current thread.
+void _thread_dispose(_thread_t *thrd); // Release a terminated thread's resources.</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macros &amp; fn</span>
+            <span class="api-sig">Sleep — _thread_sleep, _thread_sleepuntil, _thread_sleeponwq</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>#define _thread_sleep(D)                              // Sleep for a relative duration D.
+#define _thread_sleepuntil(D)                         // Sleep until an absolute timestamp D.
+#define _thread_sleeponwq(Q, D)                       // Sleep on wait-queue Q for duration D.
+void _thread_sleeponwquntil(_waitq_t *wq, _date_t e); // Sleep on wait-queue until deadline.</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macros &amp; fn</span>
+            <span class="api-sig">Preemption control &amp; status checks</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>void _preempt_disable(void);     // Disable thread preemption.
+void _preempt_enable(void);      // Re-enable thread preemption.
+#define _thread_yield()          // Voluntarily yield execution.
+
+#define _is_thread_stopped(X)    // Non-zero if the thread is stopped.
+#define _is_thread_terminated(X) // Non-zero if the thread has terminated.
+#define _is_thread_running(X)    // Non-zero if the thread is runnable.</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-gray">struct</span>
+            <span class="api-sig">_waitq_t — wait-queue object</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>A queue of sleeping threads awaiting a condition. Used internally by mutex and FIFO, and available for custom synchronization primitives.</p>
+            <pre>typedef struct {
+    uintptr_t lock; // Queue lock.
+    uintptr_t p;    // Race-condition prevention state.
+    void *l;        // Circular linked list of waiting threads.
+} _waitq_t;
+
+void _thread_schedone(_waitq_t *wq); // Wake one waiting thread.
+void _thread_schedall(_waitq_t *wq); // Wake all waiting threads.</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- CPU & TRAP -->
+      <section class="section" id="sec-cpu">
+        <div class="section-head"><i class="ti ti-server"></i><h2>CPU &amp; trap helpers</h2></div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macros &amp; fn</span>
+            <span class="api-sig">_cpuid, _clkfreq, _clkcycles, _ncpu, _oops</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <pre>#define _cpuid()          // Get the current CPU ID.
+#define _clkfreq()        // Get system clock frequency (Hz).
+_date_t _clkcycles(void); // Read current clock cycle counter.
+uintptr_t _ncpu(void);    // Returns the number of CPUs that have booted.
+#define _oops()           // Fatal shutdown with diagnostic state dump.</pre>
+          </div>
+        </div>
+
+        <div class="api-card">
+          <button class="api-card-head" onclick="toggle(this)">
+            <span class="badge badge-blue">macro</span>
+            <span class="api-sig">_trap_savedctx()</span>
+            <i class="ti ti-chevron-down chevron"></i>
+          </button>
+          <div class="api-card-body">
+            <p>Returns the saved trap context pointer. The return value is non-null only while a trap is actively being handled — use this to inspect register state during fault handling or trap dispatch.</p>
+            <pre>#define _trap_savedctx()</pre>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  function toggle(head) {
+    const body = head.nextElementSibling;
+    const chev = head.querySelector('.chevron');
+    const open = body.classList.toggle('open');
+    chev.classList.toggle('open', open);
+  }
+
+  function switchTo(id) {
+    document.querySelectorAll('.nav-item').forEach(n =>
+      n.classList.toggle('active', n.dataset.sec === id)
+    );
+    document.querySelectorAll('.section').forEach(s =>
+      s.classList.toggle('active', s.id === 'sec-' + id)
+    );
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('main').scrollTo(0, 0);
+  }
+
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => switchTo(btn.dataset.sec));
+  });
+
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+
+  document.getElementById('main').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+  });
+</script>
+</body>
+</html>
