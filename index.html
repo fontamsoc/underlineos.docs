@@ -627,7 +627,8 @@ _thread_t *_thread_cur; // Pointer to the currently running thread.</pre>
               <tr><td>entry</td><td>Thread entry point <code>void (*)(void *arg)</code></td></tr>
               <tr><td>arg</td><td>Argument forwarded to the entry function</td></tr>
             </tbody></table>
-            <div class="returns-row"><span class="returns-label">Returns</span><span>Newly created <code>_thread_t *</code> object</span></div>
+            <div class="returns-row"><span class="returns-label">Returns</span><span>Newly created <code>_thread_t *</code> object allocated from the top of the stack.</span></div>
+            <div class="note" style="margin-top:.75rem">Passing <code>null</code> for <code>stack</code> causes the stack to be <code>malloc()</code>ed internally using <code>stacksz</code>. In that case <code>_thread_dispose()</code> will free it automatically.</div>
           </div>
         </div>
 
